@@ -19,6 +19,7 @@ import kotlinx.coroutines.*
 class Exercise3Fragment : BaseFragment() {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
+    private var counterJob: Job? = null
 
     override val screenTitle get() = ScreenReachableFromHome.EXERCISE_3.description
 
@@ -28,8 +29,6 @@ class Exercise3Fragment : BaseFragment() {
 
 
     private lateinit var getReputationEndpoint: GetReputationEndpoint
-
-    private var job: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,9 +54,21 @@ class Exercise3Fragment : BaseFragment() {
         btnGetReputation = view.findViewById(R.id.btn_get_reputation)
         btnGetReputation.setOnClickListener {
             logThreadInfo("button callback")
-            job = coroutineScope.launch {
+            val startTime = System.nanoTime()
+
+            counterJob = coroutineScope.launch {
+                while (true) {
+                    delay(100)
+                    val counter = System.nanoTime() - startTime
+                    val millisecondsCounter = counter / 1000000
+                    txtElapsedTime.text = "Elapsed time: $millisecondsCounter ms"
+                }
+            }
+
+            coroutineScope.launch {
                 btnGetReputation.isEnabled = false
                 val reputation = getReputationForUser(edtUserId.text.toString())
+                counterJob?.cancel()
                 Toast.makeText(requireContext(), "reputation: $reputation", Toast.LENGTH_SHORT).show()
                 btnGetReputation.isEnabled = true
             }
@@ -68,8 +79,9 @@ class Exercise3Fragment : BaseFragment() {
 
     override fun onStop() {
         super.onStop()
-        job?.cancel()
+        coroutineScope.coroutineContext.cancelChildren()
         btnGetReputation.isEnabled = true
+        txtElapsedTime.text = ""
     }
 
     private suspend fun getReputationForUser(userId: String): Int {
