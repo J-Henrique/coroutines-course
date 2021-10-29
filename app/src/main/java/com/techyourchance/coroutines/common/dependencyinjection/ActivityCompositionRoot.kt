@@ -72,6 +72,8 @@ class ActivityCompositionRoot(
 
     val getReputationUseCase get() = GetReputationUseCase(getReputationEndpoint)
 
+    val reputationUseCase get() = com.techyourchance.coroutines.exercises.exercise5.GetReputationUseCase(getReputationEndpoint)
+
     val makeCustomerPremiumUseCase get() = MakeCustomerPremiumUseCase(premiumCustomersEndpoint, customersDao)
 
     val fetchAndCacheUserUseCase get() = FetchAndCacheUsersUseCase(getUserEndpoint, usersDao)
