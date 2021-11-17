@@ -5,6 +5,7 @@ import com.techyourchance.coroutines.common.TestUtils.printCoroutineScopeInfo
 import com.techyourchance.coroutines.common.TestUtils.printJobsHierarchy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runBlockingTest
+import org.junit.Assert
 import org.junit.Test
 import java.lang.Exception
 import kotlin.coroutines.EmptyCoroutineContext
@@ -20,9 +21,22 @@ class Exercise7Test {
         runBlocking {
             val scopeJob = Job()
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
-
+            scope.launch {
+                withContext(CoroutineName("level 1") + Dispatchers.Default) {
+                    println("level 1 started")
+                    printCoroutineScopeInfo()
+                    withContext(CoroutineName("level 2") + Dispatchers.IO) {
+                        delay(100)
+                        println("level 2 started")
+                        println("level 2 completed")
+                        printCoroutineScopeInfo()
+                    }
+                    println("level 1 completed")
+                }
+            }
 
             scopeJob.join()
+            scope.cancel()
             println("test done")
         }
     }
