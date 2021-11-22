@@ -23,20 +23,31 @@ class Exercise7Test {
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
             scope.launch {
                 withContext(CoroutineName("level 1") + Dispatchers.Default) {
-                    println("level 1 started")
-                    printCoroutineScopeInfo()
-                    withContext(CoroutineName("level 2") + Dispatchers.IO) {
+                    try {
                         delay(100)
-                        println("level 2 started")
-                        println("level 2 completed")
-                        printCoroutineScopeInfo()
+                        println("level 1 started")
+                    } catch (e: CancellationException) {
+                        println("level 1 cancelled")
+                    }
+
+                    withContext(CoroutineName("level 2") + Dispatchers.IO) {
+                        try {
+                            delay(100)
+                            println("level 2 started")
+                            println("level 2 completed")
+                        } catch (e: CancellationException) {
+                            println("level 2 cancelled")
+                        }
                     }
                     println("level 1 completed")
                 }
             }
 
+            launch {
+                delay(150)
+                scope.cancel()
+            }
             scopeJob.join()
-            scope.cancel()
             println("test done")
         }
     }
@@ -50,9 +61,42 @@ class Exercise7Test {
         runBlocking {
             val scopeJob = Job()
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
+            scope.launch {
+                println("main coroutine started")
 
+                withContext(CoroutineName("level 1")) {
+                    delay(100)
+                    try {
+                        println("level 1 started")
 
+                        /*
+                        * - Lança nova coroutine porém mantendo uma hierarquia entre as duas (filha)
+                        * - Não quebra a structure concurrency
+                        * - Coroutine principal vai esperar a conclusão dessa antes de finalizar
+                        */
+                        launch {
+                            delay(100)
+                            try {
+                                println("inner coroutine started")
+                            } catch (e: CancellationException) {
+                                println("inner coroutine cancelled")
+                            }
+                            println("inner coroutine completed")
+                        }
+                        println("level 1 completed")
+                    } catch (e: CancellationException) {
+                        println("level 1 cancelled")
+                    }
+                }
+                println("main coroutine completed")
+            }
+
+            launch {
+                delay(300)
+                scope.cancel()
+            }
             scopeJob.join()
+
             println("test done")
         }
     }
@@ -66,12 +110,43 @@ class Exercise7Test {
         runBlocking {
             val scopeJob = Job()
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
+            scope.launch {
+                println("main coroutine started")
 
+                withContext(CoroutineName("level 1")) {
+                    delay(100)
+                    try {
+                        println("level 1 started")
 
+                        /*
+                        * - Lança nova coroutine não mantendo uma hierarquia entre as duas (irmãs)
+                        * - Quebra a structure concurrency
+                        * - Coroutine principal não vai esperar a conclusão dessa antes de finalizar
+                        */
+                        scope.launch {
+                            delay(100)
+                            try {
+                                println("inner coroutine started")
+                            } catch (e: CancellationException) {
+                                println("inner coroutine cancelled")
+                            }
+                            println("inner coroutine completed")
+                        }
+                        println("level 1 completed")
+                    } catch (e: CancellationException) {
+                        println("level 1 cancelled")
+                    }
+                }
+                println("main coroutine completed")
+            }
+
+            launch {
+                delay(300)
+                scope.cancel()
+            }
             scopeJob.join()
+
             println("test done")
         }
     }
-
-
 }
