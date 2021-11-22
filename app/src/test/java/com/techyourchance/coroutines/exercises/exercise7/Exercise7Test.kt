@@ -23,20 +23,31 @@ class Exercise7Test {
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
             scope.launch {
                 withContext(CoroutineName("level 1") + Dispatchers.Default) {
-                    println("level 1 started")
-                    printCoroutineScopeInfo()
-                    withContext(CoroutineName("level 2") + Dispatchers.IO) {
+                    try {
                         delay(100)
-                        println("level 2 started")
-                        println("level 2 completed")
-                        printCoroutineScopeInfo()
+                        println("level 1 started")
+                    } catch (e: CancellationException) {
+                        println("level 1 cancelled")
+                    }
+
+                    withContext(CoroutineName("level 2") + Dispatchers.IO) {
+                        try {
+                            delay(100)
+                            println("level 2 started")
+                            println("level 2 completed")
+                        } catch (e: CancellationException) {
+                            println("level 2 cancelled")
+                        }
                     }
                     println("level 1 completed")
                 }
             }
 
+            launch {
+                delay(150)
+                scope.cancel()
+            }
             scopeJob.join()
-            scope.cancel()
             println("test done")
         }
     }
