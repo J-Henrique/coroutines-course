@@ -21,7 +21,7 @@ class Exercise7Test {
         runBlocking {
             val scopeJob = Job()
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
-            scope.launch {
+            val job = scope.launch {
                 withContext(CoroutineName("level 1") + Dispatchers.Default) {
                     try {
                         delay(100)
@@ -47,7 +47,7 @@ class Exercise7Test {
                 delay(150)
                 scope.cancel()
             }
-            scopeJob.join()
+            job.join()
             println("test done")
         }
     }
@@ -61,7 +61,7 @@ class Exercise7Test {
         runBlocking {
             val scopeJob = Job()
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
-            scope.launch {
+            val job = scope.launch {
                 println("main coroutine started")
 
                 withContext(CoroutineName("level 1")) {
@@ -95,7 +95,7 @@ class Exercise7Test {
                 delay(300)
                 scope.cancel()
             }
-            scopeJob.join()
+            job.join()
 
             println("test done")
         }
@@ -110,7 +110,7 @@ class Exercise7Test {
         runBlocking {
             val scopeJob = Job()
             val scope = CoroutineScope(scopeJob + CoroutineName("outer scope") + Dispatchers.IO)
-            scope.launch {
+            val job = scope.launch {
                 println("main coroutine started")
 
                 withContext(CoroutineName("level 1")) {
@@ -144,7 +144,7 @@ class Exercise7Test {
                 delay(300)
                 scope.cancel()
             }
-            scopeJob.join()
+            job.join()
 
             println("test done")
         }
