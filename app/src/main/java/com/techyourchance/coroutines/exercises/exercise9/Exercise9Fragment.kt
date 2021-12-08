@@ -27,7 +27,7 @@ class Exercise9Fragment : BaseFragment() {
     private lateinit var txtUsers: TextView
 
 
-    private val userIds = listOf<String>("bmq81", "gfn12", "gla34")
+    private val userIds = listOf("bmq81", "gfn12", "gla34")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,10 +53,13 @@ class Exercise9Fragment : BaseFragment() {
             coroutineScope.launch {
                 try {
                     btnFetch.isEnabled = false
-                    fetchAndCacheUsersUseCase.fetchAndCacheUsers(userIds)
+                    val users = fetchAndCacheUsersUseCase.fetchAndCacheUsers(userIds)
+                    bindUsers(users)
                     updateElapsedTimeJob.cancel()
                 } catch (e: CancellationException) {
-                    updateElapsedTimeJob.cancelAndJoin()
+                    withContext(NonCancellable) {
+                        updateElapsedTimeJob.cancelAndJoin()
+                    }
                     txtElapsedTime.text = ""
                     txtUsers.text = ""
                 } finally {
